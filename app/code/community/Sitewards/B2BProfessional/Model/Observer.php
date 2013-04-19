@@ -109,9 +109,18 @@ class Sitewards_B2BProfessional_Model_Observer {
 
 		/* @var $oB2BHelper Sitewards_B2BProfessional_Helper_Data */
 		$oB2BHelper = Mage::helper('b2bprofessional');
-
-		if($oBlock instanceof Mage_Catalog_Block_Product_Price) {
+		if(
+			(
+				$oBlock instanceof Mage_Catalog_Block_Product_Price
+				||
+				$oBlock instanceof Mage_Bundle_Block_Catalog_Product_Price
+			)
+			&&
+			!$oBlock instanceof Mage_Bundle_Block_Catalog_Product_View_Type_Bundle_Option
+		) {
+			/* @var $oProduct Mage_Catalog_Model_Product */
 			$oProduct = $oBlock->getProduct();
+
 			$iCurrentProductId = $oProduct->getId();
 
 			if ($oB2BHelper->checkActive($iCurrentProductId)) {
@@ -123,8 +132,6 @@ class Sitewards_B2BProfessional_Model_Observer {
 				} else {
 					$oTransport->setHtml('');
 				}
-				// Set can show price to false to stop tax being displayed via Symmetrics_TweaksGerman_Block_Tax
-				$oProduct->setCanShowPrice(false);
 			}
 		} elseif(
 			$oBlock instanceof Mage_Checkout_Block_Cart_Totals
@@ -235,6 +242,46 @@ class Sitewards_B2BProfessional_Model_Observer {
 				}
 				$oBlock->setData('_filterable_attributes', $aNewFilterableAttributes);
 			}
+		}
+	}
+
+	/**
+	 * On catalog_product_collection_load_after
+	 *  - loop through each product and check if it is valid
+	 *  - when no setCanShowPrice false
+	 *
+	 * @param Varien_Event_Observer $oObserver
+	 */
+	public function onCatalogProductCollectionLoadAfter(Varien_Event_Observer $oObserver) {
+		$sControllerModule = Mage::app()->getRequest()->getControllerModule();
+		$oProductCollection = $oObserver->getData('collection');
+
+		if($sControllerModule == 'Mage_Catalog') {
+			/* @var $oB2BHelper Sitewards_B2BProfessional_Helper_Data */
+			$oB2BHelper = Mage::helper('b2bprofessional');
+			foreach ($oProductCollection as $oProduct) {
+				if ($oB2BHelper->checkActive($oProduct->getId())) {
+					$oProduct->setCanShowPrice(false);
+				}
+			}
+		}
+	}
+
+	/**
+	 * On catalog_controller_product_view
+	 *  - check if it is valid and not a bundle product
+	 *  - when no setCanShowPrice false
+	 *
+	 * @param Varien_Event_Observer $oObserver
+	 */
+	public function onCatalogControllerProductView(Varien_Event_Observer $oObserver) {
+		/* @var $oProduct Mage_Catalog_Model_Product */
+		$oProduct = $oObserver->getData('product');
+
+		/* @var $oB2BHelper Sitewards_B2BProfessional_Helper_Data */
+		$oB2BHelper = Mage::helper('b2bprofessional');
+		if ($oB2BHelper->checkActive($oProduct->getId()) && $oProduct->getTypeId() != 'bundle') {
+			$oProduct->setCanShowPrice(false);
 		}
 	}
 }

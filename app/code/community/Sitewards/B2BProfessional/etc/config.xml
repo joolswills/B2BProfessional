@@ -25,7 +25,6 @@
 		<blocks>
 			<bundle>
 				<rewrite>
-					<catalog_product_price>Sitewards_B2BProfessional_Block_Bundle_Catalog_Price</catalog_product_price>
 					<catalog_product_view_type_bundle_option_checkbox>Sitewards_B2BProfessional_Block_Bundle_Catalog_Product_View_Type_Bundle_Option_Checkbox</catalog_product_view_type_bundle_option_checkbox>
 					<catalog_product_view_type_bundle_option_multi>Sitewards_B2BProfessional_Block_Bundle_Catalog_Product_View_Type_Bundle_Option_Multi</catalog_product_view_type_bundle_option_multi>
 					<catalog_product_view_type_bundle_option_radio>Sitewards_B2BProfessional_Block_Bundle_Catalog_Product_View_Type_Bundle_Option_Radio</catalog_product_view_type_bundle_option_radio>
@@ -82,6 +81,22 @@
 					</b2bprofessional>
 				</observers>
 			</core_layout_block_create_after>
+			<catalog_product_collection_load_after>
+				<observers>
+					<b2bprofessional>
+						<class>b2bprofessional/observer</class>
+						<method>onCatalogProductCollectionLoadAfter</method>
+					</b2bprofessional>
+				</observers>
+			</catalog_product_collection_load_after>
+			<catalog_controller_product_view>
+				<observers>
+					<b2bprofessional>
+						<class>b2bprofessional/observer</class>
+						<method>onCatalogControllerProductView</method>
+					</b2bprofessional>
+				</observers>
+			</catalog_controller_product_view>
 		</events>
 		<helpers>
 			<b2bprofessional>
