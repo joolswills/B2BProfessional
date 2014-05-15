@@ -35,6 +35,10 @@ class Sitewards_B2BProfessional_Model_System_Config_Source_Identifiers {
 					'value' => 'onclick',
 					'label' => 'onclick'
 				),
+				array(
+					'value' => 'action',
+					'label' => 'action'
+				),
 			);
 		}
 		return $this->_aOptions;

@@ -7,8 +7,8 @@
  * @package     Sitewards_B2BProfessional
  * @copyright   Copyright (c) 2013 Sitewards GmbH (http://www.sitewards.com/)
  */
-require_once 'Mage/Checkout/controllers/CartController.php';
-class Sitewards_B2BProfessional_CartController extends Mage_Checkout_CartController {
+require_once Mage::getBaseDir('code') . '/local/Seedsman/Promo/controllers/Mage/CartController.php';
+class Sitewards_B2BProfessional_CartController extends Seedsman_Promo_Mage_CartController {
 	/**
 	 * On checkout cart controller preDispatch
 	 * 	- validate that all products are active for customer/customer group,
