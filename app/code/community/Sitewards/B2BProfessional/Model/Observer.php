@@ -16,6 +16,16 @@ class Sitewards_B2BProfessional_Model_Observer {
 	protected static $_iLastProductId = 0;
 
 	/**
+	 * blocks which display prices
+	 *
+	 * @var array
+	 */
+	protected $aPriceBlockClassNames = array(
+		'Mage_Catalog_Block_Product_Price'        => 1,
+		'Mage_Bundle_Block_Catalog_Product_Price' => 1,
+	);
+
+	/**
 	 * Check if the site requires login to work
 	 * 	- Add notice,
 	 * 	- Redirect to the home page,
@@ -44,6 +54,7 @@ class Sitewards_B2BProfessional_Model_Observer {
 				 * 	1) Cms related for cms pages,
 				 * 	2) A front action to allow for admin pages,
 				 * 	3) Customer account to allow for login
+				 * 	4) Magento API to allow api requests
 				 */
 				if(
 					!$oControllerAction instanceof Mage_Cms_IndexController
@@ -53,6 +64,8 @@ class Sitewards_B2BProfessional_Model_Observer {
 					$oControllerAction instanceof Mage_Core_Controller_Front_Action
 						&&
 					!$oControllerAction instanceof Mage_Customer_AccountController
+					&&
+					!$oControllerAction instanceof Mage_Api_Controller_Action
 				){
 					// Redirect to the homepage
 					/* @var $oResponse Mage_Core_Controller_Response_Http */
@@ -101,6 +114,17 @@ class Sitewards_B2BProfessional_Model_Observer {
 	}
 
 	/**
+	 * checks if the block represents a price block
+	 *
+	 * @param Mage_Core_Block_Abstract $oBlock
+	 * @return bool
+	 */
+	protected function isExactlyPriceBlock($oBlock)
+	{
+		return ($oBlock && isset($this->aPriceBlockClassNames[get_class($oBlock)]));
+	}
+
+	/**
 	 * Check for block Mage_Catalog_Block_Product_Price
 	 * 	- Check the product is active via the Sitewards_B2BProfessional_Helper_Data
 	 * 	- Replace the text with that on the b2bprofessional
@@ -122,7 +146,7 @@ class Sitewards_B2BProfessional_Model_Observer {
 		/*
 		 * Check to see if we should remove the product price
 		 */
-		if($oBlock instanceof Mage_Catalog_Block_Product_Price) {
+		if($this->isExactlyPriceBlock($oBlock)) {
 			$oProduct = $oBlock->getProduct();
 			$iCurrentProductId = $oProduct->getId();
 
@@ -135,8 +159,13 @@ class Sitewards_B2BProfessional_Model_Observer {
 				} else {
 					$oTransport->setHtml('');
 				}
-				// Set can show price to false to stop tax being displayed via Symmetrics_TweaksGerman_Block_Tax
-				$oProduct->setCanShowPrice(false);
+				// Set type id to combined to stop tax being displayed via Symmetrics_TweaksGerman_Block_Tax
+				if (
+					Mage::helper('core')->isModuleEnabled('Symmetrics_TweaksGerman')
+					&& $oProduct->getTypeId() == 'bundle'
+				){
+					$oProduct->setTypeId('combined');
+				}
 			}
 		/*
 		 * Check to see if we should remove the add to cart button on the product page
@@ -250,14 +279,27 @@ class Sitewards_B2BProfessional_Model_Observer {
 		 * for bundle product which is not under active category
 		 */
 		if (Mage::helper('b2bprofessional')->isExtensionActive()) {
-			if ($oBlock instanceof Mage_Bundle_Block_Catalog_Product_View_Type_Bundle_Option_Checkbox) {
-				$oBlock->setTemplate('sitewards/b2bprofessional/catalog/product/view/type/bundle/option/checkbox.phtml');
-			} else if ($oBlock instanceof Mage_Bundle_Block_Catalog_Product_View_Type_Bundle_Option_Multi) {
-				$oBlock->setTemplate('sitewards/b2bprofessional/catalog/product/view/type/bundle/option/multi.phtml');
-			} else if ($oBlock instanceof Mage_Bundle_Block_Catalog_Product_View_Type_Bundle_Option_Radio) {
-				$oBlock->setTemplate('sitewards/b2bprofessional/catalog/product/view/type/bundle/option/radio.phtml');
-			} else if ($oBlock instanceof Mage_Bundle_Block_Catalog_Product_View_Type_Bundle_Option_Select) {
-				$oBlock->setTemplate('sitewards/b2bprofessional/catalog/product/view/type/bundle/option/select.phtml');
+
+			if (version_compare(Mage::getVersion(), '1.8.0.0') >= 0){
+				if ($oBlock instanceof Mage_Bundle_Block_Catalog_Product_View_Type_Bundle_Option_Checkbox) {
+					$oBlock->setTemplate('sitewards/b2bprofessional/catalog/product/view/type/bundle/option-post-180/checkbox.phtml');
+				} else if ($oBlock instanceof Mage_Bundle_Block_Catalog_Product_View_Type_Bundle_Option_Multi) {
+					$oBlock->setTemplate('sitewards/b2bprofessional/catalog/product/view/type/bundle/option-post-180/multi.phtml');
+				} else if ($oBlock instanceof Mage_Bundle_Block_Catalog_Product_View_Type_Bundle_Option_Radio) {
+					$oBlock->setTemplate('sitewards/b2bprofessional/catalog/product/view/type/bundle/option-post-180/radio.phtml');
+				} else if ($oBlock instanceof Mage_Bundle_Block_Catalog_Product_View_Type_Bundle_Option_Select) {
+					$oBlock->setTemplate('sitewards/b2bprofessional/catalog/product/view/type/bundle/option-post-180/select.phtml');
+				}
+			} else {
+				if ($oBlock instanceof Mage_Bundle_Block_Catalog_Product_View_Type_Bundle_Option_Checkbox) {
+					$oBlock->setTemplate('sitewards/b2bprofessional/catalog/product/view/type/bundle/option-pre-180/checkbox.phtml');
+				} else if ($oBlock instanceof Mage_Bundle_Block_Catalog_Product_View_Type_Bundle_Option_Multi) {
+					$oBlock->setTemplate('sitewards/b2bprofessional/catalog/product/view/type/bundle/option-pre-180/multi.phtml');
+				} else if ($oBlock instanceof Mage_Bundle_Block_Catalog_Product_View_Type_Bundle_Option_Radio) {
+					$oBlock->setTemplate('sitewards/b2bprofessional/catalog/product/view/type/bundle/option-pre-180/radio.phtml');
+				} else if ($oBlock instanceof Mage_Bundle_Block_Catalog_Product_View_Type_Bundle_Option_Select) {
+					$oBlock->setTemplate('sitewards/b2bprofessional/catalog/product/view/type/bundle/option-pre-180/select.phtml');
+				}
 			}
 		}
 	}
@@ -297,18 +339,20 @@ class Sitewards_B2BProfessional_Model_Observer {
 			 */
 			/* @var $oCategoryFilter Mage_Catalog_Block_Layer_Filter_Category */
 			$oCategoryFilter = $oBlock->getChild('category_filter');
-			$oCategories = $oCategoryFilter->getItems();
-			$aCategoryOptions = array();
-			foreach($oCategories as $oCategory) {
-				/* @var $oCategory Mage_Catalog_Model_Layer_Filter_Item */
-				$iCategoryId = $oCategory->getValue();
-				$aCategoryOptions[] = $iCategoryId;
-			}
+			if($oCategoryFilter instanceof Mage_Catalog_Block_Layer_Filter_Category) {
+				$oCategories = $oCategoryFilter->getItems();
+				$aCategoryOptions = array();
+				foreach($oCategories as $oCategory) {
+					/* @var $oCategory Mage_Catalog_Model_Layer_Filter_Item */
+					$iCategoryId = $oCategory->getValue();
+					$aCategoryOptions[] = $iCategoryId;
+				}
 
-			if (Mage::registry('b2bprof_category_filters') !== null){
-				Mage::unregister('b2bprof_category_filters');
+				if (Mage::registry('b2bprof_category_filters') !== null){
+					Mage::unregister('b2bprof_category_filters');
+				}
+				Mage::register('b2bprof_category_filters', $aCategoryOptions);
 			}
-			Mage::register('b2bprof_category_filters', $aCategoryOptions);
 
 			if($oB2BHelper->isActive()) {
 				$aFilterableAttributes = $oBlock->getData('_filterable_attributes');
@@ -320,6 +364,114 @@ class Sitewards_B2BProfessional_Model_Observer {
 				}
 				$oBlock->setData('_filterable_attributes', $aNewFilterableAttributes);
 			}
+		}
+	}
+
+	/**
+	 * caused by some magento magic we have to save each quote item individually if we're adding multiple of them in the same request
+	 *
+	 * @param Varien_Event_Observer $oObserver
+	 */
+	public function onCheckoutCartProductAddAfter(Varien_Event_Observer $oObserver) {
+		if (
+			Mage::app()->getRequest()->getModuleName() == 'b2bprofessional'
+			AND Mage::app()->getRequest()->getControllerName() == 'cart'
+			AND Mage::app()->getRequest()->getActionName() == 'addmultiple'
+		) {
+			$oObserver->getQuoteItem()->save();
+		}
+	}
+
+	/**
+	 * This function is called just before $quote object get stored to database.
+	 * Here, from POST data, we capture our custom field and put it in the quote object
+	 *
+	 * @param Varien_Event_Observer $oObserver
+	 */
+	public function saveQuoteBefore (Varien_Event_Observer $oObserver) {
+		$oQuote = $oObserver->getQuote();
+		$aPost = Mage::app()
+			->getFrontController()
+			->getRequest()
+			->getPost();
+		if (isset($aPost['b2bprofessional']['delivery_date'])) {
+			$sVar = $aPost['b2bprofessional']['delivery_date'];
+			$oQuote->setDeliveryDate($sVar);
+		}
+	}
+
+	/**
+	 * This function is called, just after $quote object get saved to database.
+	 * Here, after the quote object gets saved in database
+	 * we save our custom field in the our table created i.e sales_quote_custom
+	 *
+	 * @param Varien_Event_Observer $oObserver
+	 */
+	public function saveQuoteAfter (Varien_Event_Observer $oObserver) {
+		$oQuote = $oObserver->getQuote();
+		if ($oQuote->getDeliveryDate()) {
+			$sVar = $oQuote->getDeliveryDate();
+			if (!empty($sVar)) {
+				$oModel = Mage::getModel('b2bprofessional/quote');
+				$oModel->deleteByQuote($oQuote->getId(), 'delivery_date');
+				$oModel->setQuoteId($oQuote->getId());
+				$oModel->setKey('delivery_date');
+				$oModel->setValue($sVar);
+				$oModel->save();
+			}
+		}
+	}
+
+	/**
+	 * When load() function is called on the quote object,
+	 * we read our custom fields value from database and put them back in quote object.
+	 *
+	 * @param Varien_Event_Observer $oObserver
+	 */
+	public function loadQuoteAfter (Varien_Event_Observer $oObserver) {
+		$oQuote = $oObserver->getQuote();
+		$oModel = Mage::getModel('b2bprofessional/quote');
+		$aData = $oModel->getByQuote($oQuote->getId());
+		foreach ($aData as $sKey => $sValue) {
+			$oQuote->setData($sKey, $sValue);
+		}
+	}
+
+	/**
+	 * This function is called after order gets saved to database.
+	 * Here we transfer our custom fields from quote table to order table i.e sales_order_custom
+	 *
+	 * @param Varien_Event_Observer $oObserver
+	 */
+	public function saveOrderAfter (Varien_Event_Observer $oObserver) {
+		$oOrder = $oObserver->getOrder();
+		$oQuote = $oObserver->getQuote();
+		if ($oQuote->getDeliveryDate()) {
+			$sVar = $oQuote->getDeliveryDate();
+			if (!empty($sVar)) {
+				$oModel = Mage::getModel('b2bprofessional/order');
+				$oModel->deleteByOrder($oOrder->getId(), 'delivery_date');
+				$oModel->setOrderId($oOrder->getId());
+				$oModel->setKey('delivery_date');
+				$oModel->setValue($sVar);
+				$oOrder->setDeliveryDate($sVar);
+				$oModel->save();
+			}
+		}
+	}
+
+	/**
+	 * This function is called when $order->load() is done.
+	 * Here we read our custom fields value from database and set it in order object.
+	 *
+	 * @param Varien_Event_Observer $oObserver
+	 */
+	public function loadOrderAfter (Varien_Event_Observer $oObserver) {
+		$oOrder = $oObserver->getOrder();
+		$oModel = Mage::getModel('b2bprofessional/order');
+		$aData = $oModel->getByOrder($oOrder->getId());
+		foreach ($aData as $sKey => $sValue) {
+			$oOrder->setData($sKey, $sValue);
 		}
 	}
 }
