@@ -23,6 +23,7 @@
 				<Mage_Checkout />
 				<Mage_Customer />
 				<Netzarbeiter_CustomerActivation />
+				<Seedsman_Promo />
 			</depends>
 		</Sitewards_B2BProfessional>
 	</modules>
