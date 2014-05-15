@@ -43,6 +43,10 @@ class Sitewards_B2BProfessional_Model_System_Config_Source_Tags {
 					'value' => 'button',
 					'label' => '<button>'
 				),
+				array(
+					'value' => 'form',
+					'label' => '<form>'
+				),
 			);
 		}
 		return $this->_aOptions;
